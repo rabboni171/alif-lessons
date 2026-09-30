@@ -1,0 +1,3 @@
+module registrydemo
+
+go 1.24.4
