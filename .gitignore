@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Go: скомпилированные файлы и тесты
+*.exe
+*.test
+*.out
+*.prof
+/bin/
+
+CLAUDE.md
