@@ -12,13 +12,28 @@ import (
 type User struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
-	Username string `json:"username"`
+	Username string `json:"surname"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
+	Adress   Adress `json:"address"`
+}
+
+type GeoCoordinates struct {
+	Latitude  string `json:"lat"`
+	Longtitue string `json:"lng"`
+}
+
+type Adress struct {
+	Street  string         `json:"street"`
+	Suite   string         `json:"suite"`
+	City    string         `json:"city"`
+	Zipcode string         `json:"zipcode"`
+	Geo     GeoCoordinates `json:"geo"`
 }
 
 // Шаг 2. Запрос -> JSON -> структура Go
 func main() {
+	//url := "https://jsonplaceholder.typicode.com/users/1"
 	resp, err := http.Get("https://jsonplaceholder.typicode.com/users/1")
 	if err != nil {
 		fmt.Println("Ошибка запроса:", err)
