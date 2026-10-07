@@ -27,13 +27,14 @@ func main() {
 		return
 	}
 
-	// NewDecoder читает прямо из resp.Body, промежуточный []byte не нужен
 	var todo Todo
+	// NewDecoder читает прямо из resp.Body, промежуточный []byte не нужен
 	if err := json.NewDecoder(resp.Body).Decode(&todo); err != nil {
 		fmt.Println("Ошибка разбора:", err)
 		return
 	}
 
+	fmt.Printf("наша струкртура todo:%+v\n", todo)
 	fmt.Printf("Задача #%d: %s\n", todo.ID, todo.Title)
 	fmt.Printf("Выполнена: %t\n", todo.Completed)
 }

@@ -24,6 +24,7 @@ func main() {
 	}
 
 	fmt.Println("Статус:", resp.Status)
+	fmt.Println("Статус код:", resp.StatusCode)
 	fmt.Println("Тело:", string(body))
 
 	// Почему defer именно после проверки err?
