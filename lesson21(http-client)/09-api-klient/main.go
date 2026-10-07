@@ -120,10 +120,12 @@ type CreatedPost struct {
 func main() {
 	api := NewAPIClient()
 	ctx := context.Background() // пустой контекст: пока без отмены и дедлайна
+	reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
 	// 1. Простой GET: заполняем только Method, URL и Response
 	var todo Todo
-	err := api.Send(ctx, Params{
+	err := api.Send(reqCtx, Params{
 		Method:   http.MethodGet,
 		URL:      "https://jsonplaceholder.typicode.com/todos/5",
 		Response: &todo,
@@ -150,7 +152,7 @@ func main() {
 
 	// 3. POST: теперь заполнено ещё и Body
 	var created CreatedPost
-	err = api.Send(ctx, Params{
+	err = api.Send(reqCtx, Params{
 		Method:   http.MethodPost,
 		URL:      "https://jsonplaceholder.typicode.com/posts",
 		Body:     NewPost{Title: "Привет", Body: "Из своего клиента", UserID: 1},
