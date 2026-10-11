@@ -8,32 +8,36 @@
 - Плейсхолдер `$1` — **бланк с пустой графой**: текст запроса печатается заранее, а данные вписываются отдельно, и «превратиться в команду» они уже не могут.
 
 ## Подготовка (до урока)
-1. Запустить PostgreSQL (вариант с Docker):
+1. Запустить PostgreSQL через Docker Compose (из корня репозитория, где лежит `docker-compose.yml`):
    ```bash
-   docker run --name pg -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=coursedb \
-     -p 5432:5432 -d postgres:16
+   docker compose up -d --wait
+   docker compose ps          # STATUS: Up ... (healthy)
    ```
-2. Проверить подключение: `psql -h localhost -U postgres -d coursedb` (пароль `secret`).
-3. В папке урока уже лежат `go.mod` и `go.sum` с драйвером `lib/pq`. Если хотите показать студентам установку вживую — временно удалите их и выполните:
+   Все команды compose (логи, остановка, сброс данных, ошибки) — в `compose-commands.txt` в корне репозитория.
+2. Проверить подключение: `docker compose exec postgres psql -U postgres -d coursedb` (psql уже внутри контейнера, ставить на компьютер не нужно).
+3. В папке урока уже лежат `go.mod` и `go.sum` с драйвером `lib/pq` (шаги 3–11) и `pgx` (шаг 13). Если хотите показать студентам установку вживую — временно удалите их и выполните:
    ```bash
    go mod init dbdemo
    go get github.com/lib/pq
+   go get github.com/jackc/pgx/v5@v5.7.6   # нужен только для шага 13
+   go mod tidy
    ```
+   Версия `pgx` закреплена: самая свежая (v5.11) требует Go 1.25 и поднимет директиву `go` в `go.mod`, а в курсе используется Go 1.24.
 4. Сброс базы к началу (если что-то сломали или повторяете урок): файл `reset.sql`
    ```bash
+   docker compose exec -T postgres psql -U postgres -d coursedb < reset.sql
+   # или, если psql установлен на компьютере:
    psql -h localhost -U postgres -d coursedb -f reset.sql
-   # или в Docker:
-   docker exec -i pg psql -U postgres -d coursedb < reset.sql
    ```
 
 ## Как запускать
-Шаги 1–2 — SQL-файлы, команды копируем в `psql` по одной. Шаги 3–11 — Go-программы:
+Шаги 1–2 и 12 — SQL-файлы, команды копируем в `psql` по одной. Шаги 3–11 и 13 — Go-программы:
 ```bash
 cd "lesson23(sql-intro)"
 go run ./05-query-mnogo-strok
 # или из папки шага: cd 05-query-mnogo-strok && go run main.go
 ```
-Строка подключения во всех шагах одна: `host=localhost port=5432 user=postgres password=secret dbname=coursedb sslmode=disable`.
+Строка подключения в шагах 3–11 одна: `host=localhost port=5432 user=postgres password=secret dbname=coursedb sslmode=disable` — для урока так проще всего. Как делают в реальных проектах — в шаге 13 (настройки из переменных окружения, драйвер `pgx`; пример: `DB_PASSWORD=wrong go run ./13-podklyuchenie-best-practice`).
 
 ## Порядок шагов
 | # | Папка | Что показываем |
@@ -49,6 +53,8 @@ go run ./05-query-mnogo-strok
 | 9 | `09-dinamicheskii-filtr` | Фильтр на указателях: запрос собирается из частей, значения — только через `args`. |
 | 10 | `10-konsolnyi-prosmotrshchik` | Мини-проект: меню + база. Всё вместе. |
 | 11 | `11-tipichnye-oshibki` | Ломаем нарочно: порядок в `Scan`, NULL в `float64`, забытый `rows.Close()`. |
+| 12 | `12-update-delete` | `UPDATE` и `DELETE` в `psql`. Правило: сначала `SELECT` с тем же `WHERE`. Мягкое удаление. Забытый `WHERE` (закомментирован). **Показывать сразу после шага 2**, до Go-программ. |
+| 13 | `13-podklyuchenie-best-practice` | Подключение как в настоящем проекте: структура `DBConfig`, настройки из переменных окружения (`DB_HOST`, `DB_PASSWORD`…), адрес собирает `net/url`, драйвер `pgx` + `pgxpool`, таймаут и повторные попытки, пароль не в логах. **Показывать после шага 4** или в конце как «а теперь как в проде». |
 
 Что здесь **нарочно сломано** — папка `11-tipichnye-oshibki` (и «плохая» функция `findByNameUnsafe` в шаге 7). Не исправляйте.
 
@@ -63,6 +69,10 @@ go run ./05-query-mnogo-strok
 | Нет `rows.Err()` | Тихая потеря данных | Проверять после цикла |
 | `sql.Open` в каждой функции | Куча пулов | Один `*sql.DB` на приложение |
 | `sslmode` не указан | `connection requires SSL` | `sslmode=disable` локально |
+| Пароль в коде и в git | Пароль видят все, у кого есть репозиторий | Настройки из переменных окружения (шаг 13) |
+| Нет таймаута на подключение | Программа «висит», если база не отвечает | `context.WithTimeout` + `Ping` (шаг 13) |
+| `UPDATE`/`DELETE` без `WHERE` | Изменены или удалены **все** строки | Сначала `SELECT` с тем же `WHERE` (шаг 12) |
+| Порт 5432 занят / `connection refused` | Контейнер не стартует или Go не подключается | `docker compose ps`, `lsof -i :5432`, см. `compose-commands.txt` |
 
 ## Вопросы группе в конце
 1. Почему БД лучше файла для поиска?

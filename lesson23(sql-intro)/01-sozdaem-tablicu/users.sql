@@ -5,12 +5,12 @@
 -- Полезно: \dt - список таблиц, \d users - структура таблицы, \q - выход
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,                       -- уникальный номер, растёт сам
-    name TEXT NOT NULL,                          -- обязательное поле
-    email TEXT UNIQUE NOT NULL,                  -- не повторяется
-    age INT CHECK (age >= 0 AND age <= 150),     -- проверка значения
-    is_active BOOLEAN DEFAULT true,              -- значение по умолчанию
-    created_at TIMESTAMP DEFAULT NOW()           -- заполняет сама база
+    id SERIAL PRIMARY KEY,                             -- уникальный номер, растёт сам
+    name TEXT NOT NULL,                                -- обязательное поле
+    email TEXT UNIQUE NOT NULL,                        -- не повторяется
+    age INT CHECK (age >= 0 AND age <= 150),           -- проверка значения
+    is_active BOOLEAN DEFAULT true,                    -- значение по умолчанию
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()  -- заполняет сама база, вместе с часовым поясом
 );
 
 INSERT INTO users (name, email, age) VALUES
@@ -21,8 +21,6 @@ INSERT INTO users (name, email, age) VALUES
 
 SELECT * FROM users;
 
-
--- Теперь показываем, что база сама защищает данные:
 
 -- 1) email должен быть уникальным
 INSERT INTO users (name, email, age) VALUES ('Дубль', 'ali@mail.tj', 20);
