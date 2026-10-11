@@ -2,10 +2,10 @@
 -- Остальные таблицы урока (tags, orders) мы создаём по ходу урока.
 -- Запускать перед уроком и после любых экспериментов.
 --
+-- Docker Compose (из корня репозитория, путь к файлу - от корня):
+--   docker compose exec -T postgres psql -U postgres -d coursedb < "lesson24(sql-crud-join)/reset.sql"
 -- Локальный PostgreSQL:
 --   psql -h localhost -U postgres -d coursedb -f reset.sql
--- Docker:
---   docker exec -i pg psql -U postgres -d coursedb < reset.sql
 
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS tags;
@@ -18,7 +18,7 @@ CREATE TABLE users (
     email TEXT UNIQUE NOT NULL,
     age INT CHECK (age >= 0 AND age <= 150),
     is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 INSERT INTO users (name, email, age) VALUES

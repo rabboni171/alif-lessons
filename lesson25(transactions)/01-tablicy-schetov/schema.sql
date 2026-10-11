@@ -12,7 +12,7 @@ CREATE TABLE transfers (
     from_id INT REFERENCES accounts(id),
     to_id INT REFERENCES accounts(id),
     amount NUMERIC(12,2) NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 INSERT INTO accounts (owner, balance) VALUES

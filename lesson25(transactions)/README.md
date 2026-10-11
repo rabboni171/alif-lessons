@@ -12,9 +12,9 @@
 1. PostgreSQL запущен (см. `lesson23(sql-intro)/README.md`), база `coursedb`, пароль `secret`.
 2. Создать таблицы счетов и начальные данные — файл `reset.sql` (счета Али 1000, Вера 500, Тимур 250):
    ```bash
+   docker compose exec -T postgres psql -U postgres -d coursedb < reset.sql
+   # или, если psql установлен на компьютере:
    psql -h localhost -U postgres -d coursedb -f reset.sql
-   # или в Docker:
-   docker exec -i pg psql -U postgres -d coursedb < reset.sql
    ```
    Если хотите показать создание таблиц вживую — выполните вместо этого шаг 1 (`01-tablicy-schetov/schema.sql`) в `psql` по частям.
 3. `go.mod` с драйвером `lib/pq` уже лежит в папке урока.

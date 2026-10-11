@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:17
@@ -18,6 +16,14 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    # Проверка "база готова принимать подключения".
+    # Благодаря ей работает: docker compose up -d --wait
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d coursedb"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
 volumes:
   postgres_data:

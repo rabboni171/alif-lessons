@@ -2,10 +2,10 @@
 -- Запускать перед уроком, ПОСЛЕ шага 2 (там деньги "пропадают") и после любых экспериментов.
 -- Таблицы магазина (products, orders, order_items) создаются на шаге 9 файлом shop.sql.
 --
+-- Docker Compose (из корня репозитория, путь к файлу - от корня):
+--   docker compose exec -T postgres psql -U postgres -d coursedb < "lesson25(transactions)/reset.sql"
 -- Локальный PostgreSQL:
 --   psql -h localhost -U postgres -d coursedb -f reset.sql
--- Docker:
---   docker exec -i pg psql -U postgres -d coursedb < reset.sql
 
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
@@ -24,7 +24,7 @@ CREATE TABLE transfers (
     from_id INT REFERENCES accounts(id),
     to_id INT REFERENCES accounts(id),
     amount NUMERIC(12,2) NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 INSERT INTO accounts (owner, balance) VALUES

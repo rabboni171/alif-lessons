@@ -5,7 +5,7 @@ CREATE TABLE orders (
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,   -- внешний ключ
     product TEXT NOT NULL,
     amount NUMERIC(10,2) NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 INSERT INTO orders (user_id, product, amount) VALUES

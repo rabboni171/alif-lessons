@@ -12,9 +12,9 @@
 1. PostgreSQL запущен (см. `lesson23(sql-intro)/README.md`), база `coursedb`, пароль `secret`.
 2. Привести базу к началу урока — `reset.sql` (таблица `users` и 4 пользователя):
    ```bash
+   docker compose exec -T postgres psql -U postgres -d coursedb < reset.sql
+   # или, если psql установлен на компьютере:
    psql -h localhost -U postgres -d coursedb -f reset.sql
-   # или в Docker:
-   docker exec -i pg psql -U postgres -d coursedb < reset.sql
    ```
 3. `go.mod` с драйвером `lib/pq` уже лежит в папке урока.
 

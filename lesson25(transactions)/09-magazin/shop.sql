@@ -18,7 +18,7 @@ CREATE TABLE orders (
     account_id INT NOT NULL REFERENCES accounts(id),
     status TEXT NOT NULL,
     total NUMERIC(12,2) NOT NULL DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE order_items (

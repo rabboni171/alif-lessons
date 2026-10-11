@@ -1,0 +1,357 @@
+=====================================================================
+ DOCKER COMPOSE - ШПАРГАЛКА ДЛЯ УРОКА (PostgreSQL для курса)
+=====================================================================
+
+Все команды выполняем в папке, где лежит docker-compose.yml
+(корень репозитория alif-lessons).
+
+Что описано в docker-compose.yml:
+  сервис      postgres            <- это имя пишем в командах compose
+  контейнер   postgres-course     <- это имя пишем в командах docker
+  база        coursedb
+  пользователь postgres, пароль secret
+  порт        5432 (компьютер) -> 5432 (контейнер)
+  данные      том postgres_data   <- переживает остановку и удаление контейнера
+
+Главная мысль:
+  образ (image)     = установочный диск / рецепт
+  контейнер         = запущенная по рецепту "коробка" с PostgreSQL
+  том (volume)      = сейф снаружи коробки, в нём лежат данные
+  docker-compose.yml = один файл, который вместо длинной команды docker run
+                       описывает всю коробку: образ, пароль, порт, том
+
+
+---------------------------------------------------------------------
+ 0. ПЕРЕД УРОКОМ
+---------------------------------------------------------------------
+
+# Docker вообще установлен и запущен? (если ошибка - откройте Docker Desktop)
+docker --version
+docker compose version
+docker info
+
+# Проверить, что docker-compose.yml написан без ошибок и показать итоговый вид
+docker compose config
+
+# Только проверка, без вывода файла (тишина = всё хорошо)
+docker compose config -q
+
+# Какие сервисы есть в файле
+docker compose config --services
+
+# Скачать образ заранее, чтобы на уроке не ждать загрузку
+docker compose pull
+
+
+---------------------------------------------------------------------
+ 1. ЗАПУСК
+---------------------------------------------------------------------
+
+# Поднять в фоне (-d = detached, терминал остаётся свободным)  <- ОСНОВНАЯ
+docker compose up -d
+
+# Поднять и дождаться, пока PostgreSQL реально готов (работает healthcheck)
+docker compose up -d --wait
+
+# Поднять "на переднем плане": логи прямо в терминале, Ctrl+C останавливает
+docker compose up
+
+# Пересоздать контейнер, даже если ничего не менялось
+docker compose up -d --force-recreate
+
+# Запустить только один сервис (когда в файле их несколько)
+docker compose up -d postgres
+
+
+---------------------------------------------------------------------
+ 2. СОСТОЯНИЕ
+---------------------------------------------------------------------
+
+# Что запущено (колонка STATUS: Up ... (healthy) = всё хорошо)
+docker compose ps
+
+# Включая остановленные
+docker compose ps -a
+
+# Только имена сервисов
+docker compose ps --services
+
+# Какие процессы внутри контейнера
+docker compose top
+
+# Сколько памяти и процессора ест контейнер (выход - Ctrl+C)
+docker stats postgres-course
+
+# Все контейнеры на компьютере (не только из этого compose)
+docker ps
+docker ps -a
+
+
+---------------------------------------------------------------------
+ 3. ЛОГИ
+---------------------------------------------------------------------
+
+# Все логи
+docker compose logs
+
+# Следить за логами в реальном времени (выход - Ctrl+C)  <- ПОКАЗАТЬ НА УРОКЕ
+docker compose logs -f
+
+# Последние 20 строк
+docker compose logs --tail 20
+
+# Последние 20 строк и дальше следить
+docker compose logs --tail 20 -f
+
+# С временем каждой строки
+docker compose logs -t
+
+# Логи только одного сервиса
+docker compose logs -f postgres
+
+# Фраза в логах "database system is ready to accept connections" = база готова
+
+
+---------------------------------------------------------------------
+ 4. РАБОТА С БАЗОЙ ВНУТРИ КОНТЕЙНЕРА (psql)
+---------------------------------------------------------------------
+Устанавливать psql на компьютер не нужно - он уже есть внутри контейнера.
+
+# Зайти в psql (интерактивно)   <- ОСНОВНАЯ ДЛЯ УРОКА
+docker compose exec postgres psql -U postgres -d coursedb
+
+# Внутри psql:
+#   \dt              список таблиц
+#   \d users         структура таблицы users
+#   \l               список баз
+#   \du              список пользователей
+#   \x               расширенный вывод вкл/выкл (удобно для широких таблиц)
+#   \timing          показывать время выполнения запроса
+#   \conninfo        к чему мы подключены
+#   \i файл.sql      выполнить файл (путь внутри контейнера!)
+#   \q               выход
+
+# Выполнить один запрос и сразу выйти
+docker compose exec postgres psql -U postgres -d coursedb -c "SELECT version();"
+docker compose exec postgres psql -U postgres -d coursedb -c "SELECT * FROM users;"
+
+# Выполнить .sql файл с вашего компьютера
+# ВАЖНО: ключ -T обязателен, когда подаём файл через "<"
+docker compose exec -T postgres psql -U postgres -d coursedb < "lesson23(sql-intro)/reset.sql"
+docker compose exec -T postgres psql -U postgres -d coursedb < "lesson23(sql-intro)/01-sozdaem-tablicu/users.sql"
+docker compose exec -T postgres psql -U postgres -d coursedb < "lesson23(sql-intro)/12-update-delete/update-delete.sql"
+
+# Выполнить файл и остановиться на первой ошибке
+docker compose exec -T postgres psql -U postgres -d coursedb -v ON_ERROR_STOP=1 < "lesson23(sql-intro)/reset.sql"
+
+# Открыть обычный shell внутри контейнера
+docker compose exec postgres bash
+# выход - команда exit
+
+# Те же команды, но через имя контейнера (без compose)
+docker exec -it postgres-course psql -U postgres -d coursedb
+docker exec -i postgres-course psql -U postgres -d coursedb < "lesson23(sql-intro)/reset.sql"
+
+# Подключиться к базе с компьютера (если psql установлен локально)
+psql -h localhost -U postgres -d coursedb
+# или одной строкой-адресом
+psql "postgres://postgres:secret@localhost:5432/coursedb?sslmode=disable"
+
+
+---------------------------------------------------------------------
+ 5. ОСТАНОВКА И ЗАПУСК
+---------------------------------------------------------------------
+
+# Остановить (контейнер ОСТАЁТСЯ, данные целы)
+docker compose stop
+
+# Запустить остановленный
+docker compose start
+
+# Перезапустить
+docker compose restart
+
+# Поставить на паузу / снять с паузы
+docker compose pause
+docker compose unpause
+
+
+---------------------------------------------------------------------
+ 6. УДАЛЕНИЕ
+---------------------------------------------------------------------
+
+# Остановить и УДАЛИТЬ контейнер (том с данными остаётся!)
+docker compose down
+
+# Остановить, удалить контейнер И ТОМ  <-  ВСЕ ДАННЫЕ БАЗЫ ПРОПАДУТ!
+# Это способ "начать с чистого листа". Таблица users исчезнет.
+docker compose down -v
+
+# То же, плюс удалить скачанный образ
+docker compose down -v --rmi all
+
+# Удалить остановленные контейнеры из compose
+docker compose rm
+
+# Посмотреть тома
+docker volume ls
+
+# Удалить том вручную (контейнер должен быть удалён)
+# Имя тома = <папка проекта>_postgres_data, смотрите в docker volume ls
+docker volume rm alif-lessons_postgres_data
+
+# Почистить неиспользуемое (контейнеры, сети, "висячие" образы)
+docker system prune
+
+# Сколько места занимает docker
+docker system df
+
+# Разница, которую нужно запомнить:
+#   docker compose stop      -> контейнер есть, остановлен, данные есть
+#   docker compose down      -> контейнера нет, данные есть (том)
+#   docker compose down -v   -> нет ни контейнера, ни данных
+
+
+---------------------------------------------------------------------
+ 7. РЕЗЕРВНАЯ КОПИЯ И ВОССТАНОВЛЕНИЕ
+---------------------------------------------------------------------
+
+# Сделать дамп базы в файл на компьютере
+docker compose exec -T postgres pg_dump -U postgres coursedb > backup.sql
+
+# Восстановить из дампа (в пустую базу)
+docker compose exec -T postgres psql -U postgres -d coursedb < backup.sql
+
+# Скопировать файл с компьютера в контейнер и обратно
+docker compose cp reset.sql postgres:/tmp/reset.sql
+docker compose cp postgres:/tmp/reset.sql ./reset-copy.sql
+
+
+---------------------------------------------------------------------
+ 8. ОБНОВЛЕНИЕ ОБРАЗА И ПЕРЕЗАПУСК ПОСЛЕ ИЗМЕНЕНИЯ docker-compose.yml
+---------------------------------------------------------------------
+
+# Поменяли что-то в docker-compose.yml (порт, пароль, версию)?
+# Достаточно снова выполнить - compose пересоздаст только то, что изменилось
+docker compose up -d
+
+# Скачать свежую версию образа и пересоздать контейнер
+docker compose pull
+docker compose up -d
+
+# Какие образы есть
+docker compose images
+docker images
+
+# ВНИМАНИЕ: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB читаются ТОЛЬКО
+# при первом создании тома. Поменяли пароль в файле, а он "не меняется"?
+# Нужно: docker compose down -v && docker compose up -d
+
+
+---------------------------------------------------------------------
+ 9. СЦЕНАРИЙ ДЛЯ ЛАЙВКОДИНГА: "ВВЕДЕНИЕ В SQL"
+---------------------------------------------------------------------
+
+# --- Шаг 1. Поднимаем базу ---
+docker compose up -d --wait
+docker compose ps
+docker compose logs --tail 5
+
+# --- Шаг 2. Заходим в базу ---
+docker compose exec postgres psql -U postgres -d coursedb
+#   \dt                      <- таблиц пока нет
+#   (дальше копируем запросы из .sql файлов по одному)
+#   lesson23(sql-intro)/01-sozdaem-tablicu/users.sql     CREATE TABLE, INSERT
+#   lesson23(sql-intro)/02-vybiraem-dannye/select.sql    SELECT
+#   lesson23(sql-intro)/12-update-delete/update-delete.sql   UPDATE, DELETE
+#   \q                       <- выходим
+
+# --- Шаг 3. Показываем, что данные переживают перезапуск ---
+docker compose stop
+docker compose start
+docker compose exec postgres psql -U postgres -d coursedb -c "SELECT COUNT(*) FROM users;"
+
+# --- Шаг 4. Удаляем контейнер - данные всё равно на месте (том) ---
+docker compose down
+docker compose up -d --wait
+docker compose exec postgres psql -U postgres -d coursedb -c "SELECT COUNT(*) FROM users;"
+
+# --- Шаг 5. Что-то сломали - возвращаем базу к началу урока ---
+docker compose exec -T postgres psql -U postgres -d coursedb < "lesson23(sql-intro)/reset.sql"
+
+# --- Шаг 6. Совсем с нуля (удалить и контейнер, и данные) ---
+docker compose down -v
+docker compose up -d --wait
+
+# --- Шаг 7. Go-программы подключаются к этой же базе ---
+cd "lesson23(sql-intro)"
+go run ./03-podklyuchenie-k-baze
+go run ./13-podklyuchenie-best-practice
+
+# --- Конец урока ---
+docker compose stop        # оставить данные до завтра
+# или
+docker compose down        # убрать контейнер, данные сохранить
+
+
+---------------------------------------------------------------------
+ 10. ТИПИЧНЫЕ ПРОБЛЕМЫ
+---------------------------------------------------------------------
+
+Ошибка: Cannot connect to the Docker daemon / failed to connect to the docker API
+  Причина: Docker Desktop не запущен.
+  Решение: открыть Docker Desktop, дождаться "Engine running", повторить.
+
+Ошибка: port is already allocated / address already in use (порт 5432)
+  Причина: на компьютере уже работает другой PostgreSQL или другой контейнер.
+  Решение: найти, кто занял порт:
+      lsof -i :5432
+      docker ps
+  затем остановить его. Либо поменять порт в docker-compose.yml
+  на "5433:5432" и подключаться к localhost:5433.
+
+Ошибка: container name "/postgres-course" is already in use
+  Причина: остался контейнер с таким именем (например, от docker run).
+  Решение: docker rm -f postgres-course
+
+Ошибка: password authentication failed for user "postgres"
+  Причина: том создан со старым паролем, пароль в файле поменяли позже.
+  Решение: docker compose down -v && docker compose up -d --wait
+  (данные пропадут - это нормально для учебной базы)
+
+Ошибка: database "coursedb" does not exist
+  Причина: том создан раньше без POSTGRES_DB.
+  Решение: то же самое - down -v и up.
+
+Ошибка: relation "users" does not exist
+  Причина: таблицу ещё не создали (или сделали down -v).
+  Решение: выполнить users.sql или reset.sql (раздел 4).
+
+Ошибка: Go-программа - connection refused
+  Причина: контейнер не запущен или база ещё стартует.
+  Решение: docker compose ps (должно быть "healthy"), при необходимости
+  docker compose up -d --wait
+
+Ошибка: the input device is not a TTY (при exec с "<")
+  Причина: забыли ключ -T.
+  Решение: docker compose exec -T postgres psql ... < файл.sql
+
+Предупреждение: the attribute `version` is obsolete
+  Причина: старая строка version: "3.9" в docker-compose.yml.
+  Решение: просто удалить эту строку (в новых версиях Compose она не нужна).
+
+
+---------------------------------------------------------------------
+ 11. САМОЕ НУЖНОЕ - ШПАРГАЛКА В 10 СТРОК
+---------------------------------------------------------------------
+
+docker compose up -d --wait                                  # поднять
+docker compose ps                                            # статус
+docker compose logs -f                                       # логи
+docker compose exec postgres psql -U postgres -d coursedb    # зайти в базу
+docker compose exec -T postgres psql -U postgres -d coursedb < файл.sql   # выполнить файл
+docker compose stop                                          # остановить
+docker compose start                                         # запустить снова
+docker compose down                                          # убрать контейнер (данные целы)
+docker compose down -v                                       # убрать ВСЁ, включая данные
+docker compose config                                        # проверить файл
