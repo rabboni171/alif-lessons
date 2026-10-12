@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/lib/pq" // драйвер PostgreSQL. "_" - импортируем только ради его init()
+	_ "github.com/lib/pq"
 )
 
 func main() {
