@@ -45,7 +45,7 @@ func main() {
 	db := mustConnect()
 	defer db.Close()
 
-	err := createUser(db, "Шерзод", "sherzod@mail.tj", 22)
+	err := createUser(db, "Шерзодшох", "sherzod@mail.tj", 25)
 	if err != nil {
 		log.Fatal(err)
 	}

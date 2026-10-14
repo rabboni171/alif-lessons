@@ -14,9 +14,11 @@ type User struct {
 	ID        int
 	Name      string
 	Email     string
+	Address   string
 	Age       int
 	IsActive  bool
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // Подключение вынесли в функцию, чтобы не повторять его в каждой программе.
@@ -38,8 +40,9 @@ func mustConnect() *sql.DB {
 // Этот шаблон из 5 пунктов повторяется ВСЕГДА, когда читаем несколько строк.
 func getAllUsers(db *sql.DB) ([]User, error) {
 	// 1. Делаем запрос и получаем rows
+	//id, name, email, age, is_active, created_at
 	rows, err := db.Query(`
-		SELECT id, name, email, age, is_active, created_at
+		SELECT id, name, email, age, is_active, created_at, updated_at, address
 		FROM users
 		ORDER BY id
 	`)
@@ -57,7 +60,14 @@ func getAllUsers(db *sql.DB) ([]User, error) {
 		var u User
 
 		// 4. Scan: порядок полей СТРОГО как в SELECT
-		err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Age, &u.IsActive, &u.CreatedAt)
+		err := rows.Scan(&u.ID,
+			&u.Name,
+			&u.Email,
+			&u.Age,
+			&u.IsActive,
+			&u.CreatedAt,
+			&u.UpdatedAt,
+			&u.Address)
 		if err != nil {
 			return nil, fmt.Errorf("сканирование строки: %w", err)
 		}
@@ -76,7 +86,8 @@ func printUsers(users []User) {
 	fmt.Printf("%-4s %-10s %-20s %-5s %s\n", "ID", "Имя", "Email", "Возр", "Активен")
 	fmt.Println(strings.Repeat("-", 55))
 	for _, u := range users {
-		fmt.Printf("%-4d %-10s %-20s %-5d %t\n", u.ID, u.Name, u.Email, u.Age, u.IsActive)
+		//fmt.Printf("%-4d %-10s %-20s %-5d %s %t\n", u.ID, u.Name, u.Email, u.Age, u.IsActive, u.Address)
+		log.Println(u)
 	}
 }
 

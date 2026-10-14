@@ -90,7 +90,7 @@ func main() {
 	defer db.Close()
 
 	fmt.Println("--- Обновляем возраст Али ---")
-	if err := updateUserAge(db, 1, 26); err != nil {
+	if err := updateUserAge(db, 1, 30); err != nil {
 		fmt.Println("✗", err)
 	}
 
